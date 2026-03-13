@@ -43,9 +43,20 @@ diccionario_novedades = {
 }
 
 # ==========================================
-# 1. BASE DE DATOS Y PARCHES
+# 1. BASE DE DATOS Y PARCHES (VERSIÓN NUBE)
 # ==========================================
-conn = sqlite3.connect("data/sistema_seguridad.db", check_same_thread=False, timeout=15)
+import time
+
+if not os.path.exists("data"):
+    os.makedirs("data")
+
+# Aumentamos el timeout y activamos el modo WAL para evitar bloqueos de concurrencia en la nube
+conn = sqlite3.connect("data/sistema_seguridad.db", check_same_thread=False, timeout=20)
+try:
+    conn.execute("PRAGMA journal_mode=WAL")
+except:
+    pass
+
 c = conn.cursor()
 
 c.execute('CREATE TABLE IF NOT EXISTS clientes (id INTEGER PRIMARY KEY, codigo TEXT UNIQUE, nombre TEXT)')
@@ -74,6 +85,71 @@ c.execute('''CREATE TABLE IF NOT EXISTS periodos (
              estado TEXT DEFAULT 'Pendiente'
              )''')
 
+# --- NUEVAS TABLAS MÓDULO RRHH ---
+c.execute('CREATE TABLE IF NOT EXISTS cargos (id INTEGER PRIMARY KEY, nombre TEXT UNIQUE)')
+c.execute('''CREATE TABLE IF NOT EXISTS empleados (
+             nui TEXT PRIMARY KEY, 
+             apellidos TEXT, 
+             nombres TEXT, 
+             cargo TEXT, 
+             centro_costo TEXT, 
+             coordinador TEXT, 
+             provincia TEXT, 
+             ciudad TEXT, 
+             f_salida TEXT, 
+             estado TEXT DEFAULT 'Activo'
+             )''')
+c.execute('''CREATE TABLE IF NOT EXISTS historico_sueldos (
+             id INTEGER PRIMARY KEY, 
+             empleado_nui TEXT, 
+             sueldo REAL, 
+             f_inicio TEXT, 
+             f_fin TEXT
+             )''')
+
+# Parches silenciosos a prueba de fallos
+try: c.execute("ALTER TABLE programacion_diaria ADD COLUMN operador TEXT DEFAULT ''")
+except: pass
+try: c.execute("ALTER TABLE programacion_diaria ADD COLUMN novedad TEXT DEFAULT '0'")
+except: pass
+try: c.execute("ALTER TABLE programacion_diaria ADD COLUMN puesto_id INTEGER DEFAULT 0")
+except: pass
+try: c.execute("ALTER TABLE novedades ADD COLUMN motivo TEXT DEFAULT ''")
+except: pass
+try: c.execute("ALTER TABLE puestos ADD COLUMN horas_semana REAL DEFAULT 84")
+except: pass
+try: c.execute("ALTER TABLE guardias ADD COLUMN periodo_id INTEGER DEFAULT 0")
+except: pass
+try: c.execute("ALTER TABLE puestos ADD COLUMN secuencia INTEGER DEFAULT 0")
+except: pass
+try: c.execute("ALTER TABLE puestos ADD COLUMN estado TEXT DEFAULT 'Habilitado'")
+except: pass
+try: c.execute("ALTER TABLE codigos_horario ADD COLUMN fecha_base TEXT DEFAULT 'SEMANAL'")
+except: pass
+
+try: 
+    c.execute("UPDATE guardias SET periodo_id = (SELECT MIN(id) FROM periodos) WHERE periodo_id = 0 OR periodo_id IS NULL")
+except: pass
+
+try:
+    c.execute("SELECT id, cliente_id FROM puestos WHERE secuencia = 0 OR secuencia IS NULL")
+    puestos_sin_sec = c.fetchall()
+    for p_id, c_id in puestos_sin_sec:
+        c.execute("SELECT MAX(secuencia) FROM puestos WHERE cliente_id=?", (c_id,))
+        max_val = c.fetchone()[0]
+        next_val = (max_val or 0) + 1
+        c.execute("UPDATE puestos SET secuencia=? WHERE id=?", (next_val, p_id))
+except: pass
+
+# Candado de guardado con reintentos para la nube
+try:
+    conn.commit()
+except sqlite3.OperationalError:
+    time.sleep(1) # Si está bloqueada, espera 1 segundo y vuelve a intentar
+    try:
+        conn.commit()
+    except:
+        pass
 # --- NUEVAS TABLAS MÓDULO RRHH ---
 c.execute('CREATE TABLE IF NOT EXISTS cargos (id INTEGER PRIMARY KEY, nombre TEXT UNIQUE)')
 c.execute('''CREATE TABLE IF NOT EXISTS empleados (
