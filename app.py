@@ -21,13 +21,13 @@ st.markdown("""
     <style>
         /* Reducir la fuente global de toda la app */
         html, body, p, span, a, button, input, select, div {
-            font-size: 14px !important; 
+            font-size: 12px !important; 
         }
         
         /* Achicar los títulos y subtítulos */
-        h1 { font-size: 24px !important; padding-bottom: 0.5rem !important; }
-        h2 { font-size: 20px !important; padding-bottom: 0.5rem !important; }
-        h3 { font-size: 16px !important; padding-bottom: 0.5rem !important; }
+        h1 { font-size: 22px !important; padding-bottom: 0.5rem !important; }
+        h2 { font-size: 18px !important; padding-bottom: 0.5rem !important; }
+        h3 { font-size: 14px !important; padding-bottom: 0.5rem !important; }
         
         /* Reducir el espacio en blanco superior e inferior de la página */
         .block-container {
