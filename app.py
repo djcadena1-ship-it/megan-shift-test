@@ -16,6 +16,39 @@ except ImportError:
 # Configuración estilo ERP
 st.set_page_config(page_title="Megan Shift Planning JC", layout="wide", initial_sidebar_state="expanded")
 
+# --- INYECCIÓN DE CSS PARA COMPACTAR LA INTERFAZ (ESTILO ERP) ---
+st.markdown("""
+    <style>
+        /* Reducir la fuente global de toda la app */
+        html, body, p, span, a, button, input, select, div {
+            font-size: 14px !important; 
+        }
+        
+        /* Achicar los títulos y subtítulos */
+        h1 { font-size: 24px !important; padding-bottom: 0.5rem !important; }
+        h2 { font-size: 20px !important; padding-bottom: 0.5rem !important; }
+        h3 { font-size: 16px !important; padding-bottom: 0.5rem !important; }
+        
+        /* Reducir el espacio en blanco superior e inferior de la página */
+        .block-container {
+            padding-top: 2rem !important;
+            padding-bottom: 2rem !important;
+        }
+        
+        /* Hacer que los números gigantes de las Métricas sean más discretos */
+        [data-testid="stMetricValue"] {
+            font-size: 24px !important;
+        }
+        
+        /* Achicar la letra dentro de las tablas (DataFrames) */
+        [data-testid="stDataFrame"] {
+            font-size: 12px !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
+# ----------------------------------------------------------------
+
+
 # --- DICCIONARIOS MAESTROS ---
 ecuador = {
     "Azuay": ["Cuenca", "Gualaceo", "Paute"],
