@@ -80,10 +80,18 @@ diccionario_novedades = {
 # ==========================================
 import time
 
-if not os.path.exists("data"):
-    os.makedirs("data")
+# --- CREACIÓN DE RUTA ABSOLUTA PARA STREAMLIT CLOUD ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
 
-conn = sqlite3.connect("data/sistema_seguridad.db", check_same_thread=False, timeout=20)
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
+
+DB_PATH = os.path.join(DATA_DIR, "sistema_seguridad.db")
+
+# Conectamos usando la ruta absoluta asegurada
+conn = sqlite3.connect(DB_PATH, check_same_thread=False, timeout=20)
+
 try:
     conn.execute("PRAGMA journal_mode=WAL")
 except:
